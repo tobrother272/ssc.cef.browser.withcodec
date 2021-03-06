@@ -6,25 +6,17 @@
 package ssccefbrowser;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.Label;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringTokenizer;
-import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.OS;
@@ -50,6 +42,7 @@ import tests.detailed.ui.ControlPanel;
 import tests.detailed.ui.MenuBar;
 import tests.detailed.ui.StatusPanel;
 import tests.detailed.util.DataUri;
+import util.Facking;
 import util.TaskReadThread;
 import util.ToolSetting;
 
@@ -92,7 +85,7 @@ public class SSCCefBrowser extends BrowserFrame {
                 ToolSetting.getInstance().profile = string.replaceAll("profile:", "");
             } else if (string.startsWith("proxy:")) {
                 ToolSetting.getInstance().proxyHost = string.replaceAll("proxy:", "").split(":")[0];
-                ToolSetting.getInstance().proxyPort = Integer.parseInt(string.replaceAll("proxy:", "").split(":")[0]);
+                ToolSetting.getInstance().proxyPort = Integer.parseInt(string.replaceAll("proxy:", "").split(":")[1]);
             } else if (string.startsWith("useragent:")) {
                 ToolSetting.getInstance().userAgent = string.replaceAll("useragent:", "");
             } else if (string.startsWith("account:")) {
@@ -103,7 +96,12 @@ public class SSCCefBrowser extends BrowserFrame {
                 ToolSetting.getInstance().h = Integer.parseInt(string.replaceAll("h:", ""));
             } else if (string.startsWith("fake:")) {
                 ToolSetting.getInstance().fake = Boolean.parseBoolean(string.replaceAll("fake:", ""));
+            } else if (string.startsWith("runMode:")) {
+                ToolSetting.getInstance().runMode = Boolean.parseBoolean(string.replaceAll("runMode:", ""));
+            } else if (string.startsWith("startPage:")) {
+                ToolSetting.getInstance().startPage = string.replaceAll("startPage:", "");
             }
+
         }
         ToolSetting.getInstance().init();
         if (!CefApp.startup(args)) {
@@ -154,31 +152,30 @@ public class SSCCefBrowser extends BrowserFrame {
     public void setLoading(boolean loading) {
         this.loading = loading;
     }
-
-    public static void click(Component target, int x, int y) {
-        MouseEvent press, release, click;
-        Point point;
-        long time;
-
-        point = new Point(x, y);
-
-        SwingUtilities.convertPointToScreen(point, target);
-
-        time = System.currentTimeMillis();
-        press = new MouseEvent(target, MouseEvent.MOUSE_PRESSED, time, 0, x, y, point.x, point.y, 1, false, MouseEvent.BUTTON1);
-        release = new MouseEvent(target, MouseEvent.MOUSE_RELEASED, time, 0, x, y, point.x, point.y, 1, false, MouseEvent.BUTTON1);
-        click = new MouseEvent(target, MouseEvent.MOUSE_CLICKED, time, 0, x, y, point.x, point.y, 1, false, MouseEvent.BUTTON1);
-
-        target.dispatchEvent(press);
-        target.dispatchEvent(click);
-        target.dispatchEvent(release);
-    }
+//
+//    public static void click(Component target, int x, int y) {
+//        MouseEvent press, release, click;
+//        Point point;
+//        long time;
+//
+//        point = new Point(x, y);
+//
+//        SwingUtilities.convertPointToScreen(point, target);
+//
+//        time = System.currentTimeMillis();
+//        press = new MouseEvent(target, MouseEvent.MOUSE_PRESSED, time, 0, x, y, point.x, point.y, 1, false, MouseEvent.BUTTON1);
+//        release = new MouseEvent(target, MouseEvent.MOUSE_RELEASED, time, 0, x, y, point.x, point.y, 1, false, MouseEvent.BUTTON1);
+//        click = new MouseEvent(target, MouseEvent.MOUSE_CLICKED, time, 0, x, y, point.x, point.y, 1, false, MouseEvent.BUTTON1);
+//
+//        target.dispatchEvent(press);
+//        target.dispatchEvent(click);
+//        target.dispatchEvent(release);
+//    }
 
     public SSCCefBrowser(boolean osrEnabled, boolean transparentPaintingEnabled,
             boolean createImmediately, String[] args) {
         this.osr_enabled_ = true;
         this.transparent_painting_enabled_ = transparentPaintingEnabled;
-
         CefApp myApp;
         if (CefApp.getState() != CefApp.CefAppState.INITIALIZED) {
             // 1) CefApp is the entry point for JCEF. You can pass
@@ -195,21 +192,26 @@ public class SSCCefBrowser extends BrowserFrame {
             //    settings.cache_path = ToolSetting.getInstance().profile;
             //}
              */
+
             String[] args2 = new String[]{
-                "--remote-debugging-port=12345",
                 // "--cache-path=\"C:\\Users\\PC\\Desktop\\User Data\\Default\""
                 "-–disable-web-security",
                 "--enable-media-stream=1",
+                "--off-screen-rendering-enabled",
+                "--transparent-painting-enabled",
                 "--autoplay-policy=no-user-gesture-required",
+                "--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies",
+                "--enable-blink-features=WebBluetooth,Badging,InstalledApp,WakeLock,Notifications,WebAnimationsAPI,AOMPhase1 en 0 1 1 prof/S6PzeRAd",
+                "--allow-running-insecure-content",
+                "--unique-process-id=1amfxmkz",
+                "--log-severity=disable",
+                "--disable-features=MimeHandlerViewInCrossProcessFrame",
                 "--useflash",
                 "--skipframes",
-                "--unique-process-id=1amfxmkz",
                 "--profile",
                 "--extensions",
                 "--no-sandbox",
                 "--lang=en-US",
-                "--log-severity=disable",
-                "--disable-features=MimeHandlerViewInCrossProcessFrame",
                 "--high-dpi-support",
                 "--disable-site-isolation-trials",
                 "--disable-gpu",
@@ -217,7 +219,6 @@ public class SSCCefBrowser extends BrowserFrame {
                 "--disable-gpu-shader-disk-cache",
                 "--ignore-certificate-errors",
                 "--enable-widevine-cdm",
-                "--enable-blink-features=WebBluetooth,Badging,InstalledApp,WakeLock,Notifications,WebAnimationsAPI,AOMPhase1 en 0 1 1 prof/S6PzeRAd",
                 "--allow-running-insecure-content"
             };
             myApp = CefApp.getInstance(args2, ToolSetting.getInstance().getCefSettings());
@@ -252,7 +253,6 @@ public class SSCCefBrowser extends BrowserFrame {
         client_.addJSDialogHandler(new JSDialogHandler());
         client_.addKeyboardHandler(new KeyboardHandler());
         client_.addRequestHandler(new RequestHandler(this));
-
         //    Beside the normal handler instances, we're registering a MessageRouter
         //    as well. That gives us the opportunity to reply to JavaScript method
         //    calls (JavaScript binding). We're using the default configuration, so
@@ -264,7 +264,10 @@ public class SSCCefBrowser extends BrowserFrame {
         client_.addDisplayHandler(new CefDisplayHandlerAdapter() {
             @Override
             public void onAddressChange(CefBrowser browser, CefFrame frame, String url) {
-                control_pane_.setAddress(browser, url);
+
+                if (!ToolSetting.getInstance().runMode) {
+                    control_pane_.setAddress(browser, url);
+                }
             }
 
             @Override
@@ -289,7 +292,7 @@ public class SSCCefBrowser extends BrowserFrame {
             public void onLoadingStateChange(CefBrowser browser, boolean isLoading,
                     boolean canGoBack, boolean canGoForward) {
                 control_pane_.update(browser, isLoading, canGoBack, canGoForward);
-                status_panel_.setIsInProgress(isLoading);
+                //status_panel_.setIsInProgress(isLoading);
                 setLoading(isLoading);
                 if (!isLoading && !errorMsg_.isEmpty()) {
                     browser.loadURL(DataUri.create("text/html", errorMsg_));
@@ -298,29 +301,45 @@ public class SSCCefBrowser extends BrowserFrame {
             }
 
             @Override
+            public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+                Facking.fakingLoadEnd(browser, frame);
+
+                System.out.println("Load end");
+
+                if (task != null) {
+                    if (task.firstMessage) {
+                        task.firstMessage = false;
+                        task.sendMessageToServer("#connected#" + ToolSetting.getInstance().account);
+                    }
+                }
+            }
+
+            @Override
             public void onLoadError(CefBrowser browser, CefFrame frame, CefLoadHandler.ErrorCode errorCode,
                     String errorText, String failedUrl) {
-                if (errorCode != CefLoadHandler.ErrorCode.ERR_NONE && errorCode != CefLoadHandler.ErrorCode.ERR_ABORTED) {
-                    errorMsg_ = "<html><head>";
-                    errorMsg_ += "<title>Error while loading</title>";
-                    errorMsg_ += "</head><body>";
-                    errorMsg_ += "<h1>" + errorCode + "</h1>";
-                    errorMsg_ += "<h3>Failed to load " + failedUrl + "</h3>";
-                    errorMsg_ += "<p>" + (errorText == null ? "" : errorText) + "</p>";
-                    errorMsg_ += "</body></html>";
-                    browser.stopLoad();
+                System.out.println("Load error " + errorText);
+                System.out.println("Url " + browser.getURL());
+                if (!errorText.contains("ERR_BLOCKED_BY_RESPONSE") && !browser.getURL().contains("https://www.youtube.com/")) {
+                    if (errorCode != CefLoadHandler.ErrorCode.ERR_NONE && errorCode != CefLoadHandler.ErrorCode.ERR_ABORTED) {
+                        errorMsg_ = "<html><head>";
+                        errorMsg_ += "<title>Error while loading</title>";
+                        errorMsg_ += "</head><body>";
+                        errorMsg_ += "<h1>" + errorCode + "</h1>";
+                        errorMsg_ += "<h3>Failed to load " + failedUrl + "</h3>";
+                        errorMsg_ += "<p>" + (errorText == null ? "" : errorText) + "</p>";
+                        errorMsg_ += "</body></html>";
+                        browser.stopLoad();
+                    }
                 }
             }
         });
 
         // Create the browser.
         messageLabel = new Label("......................");
-        CefBrowser browser = client_.createBrowser("https://music.apple.com/us/browse", osrEnabled, transparentPaintingEnabled, null);
+        CefBrowser browser = client_.createBrowser(ToolSetting.getInstance().startPage, osrEnabled, transparentPaintingEnabled, null);
         setBrowser(browser);
         JPanel contentPanel = createContentPanel();
-
         /*
-        
         JButton backButton_ = new JButton("Back");
         backButton_.setFocusable(false);
         backButton_.setAlignmentX(LEFT_ALIGNMENT);
@@ -328,31 +347,35 @@ public class SSCCefBrowser extends BrowserFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 for (String stringTokenizer : getBrowser().getFrameNames()) {
-                    System.out.println(""+stringTokenizer);
-                    
+                    if(stringTokenizer.length()!=0){
+                         System.out.println("" + stringTokenizer);
+                         getBrowser().getFrame(stringTokenizer).executeJavaScript("console.log('" + stringTokenizer + " '+document.evaluate(\"//button[contains(@class,'button-primary')]\", document, null, 7, null).snapshotItem(0).click())", getBrowser().getFrame(stringTokenizer).getURL(), 0);
+                    }
                 }
-                 getBrowser().getFrame("Widget").executeJavaScript("document.getElementById('account_name_text_field').value='xxxxxxxx'", getBrowser().getFrame("Widget").getURL(), 0);
-              //getBrowser().executeJavaScript("", getBrowser().getURL(), 0);
+                //getBrowser().executeJavaScript("", getBrowser().getURL(), 0);
             }
         });
-        
-        */
-        
+         */
         getContentPane().add(contentPanel, BorderLayout.CENTER);
-        getContentPane().add(messageLabel, BorderLayout.PAGE_START);
+        if (!ToolSetting.getInstance().runMode) {
 
+            getContentPane().add(messageLabel, BorderLayout.PAGE_START);
+        }
+        
         // Clear focus from the browser when the address field gains focus.
-        control_pane_.getAddressField().addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (!browserFocus_) {
-                    return;
+        if (!ToolSetting.getInstance().runMode) {
+            control_pane_.getAddressField().addFocusListener(new FocusAdapter() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    if (!browserFocus_) {
+                        return;
+                    }
+                    browserFocus_ = false;
+                    KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+                    control_pane_.getAddressField().requestFocus();
                 }
-                browserFocus_ = false;
-                KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
-                control_pane_.getAddressField().requestFocus();
-            }
-        });
+            });
+        }
 
         // Clear focus from the address field when the browser gains focus.
         client_.addFocusHandler(new CefFocusHandlerAdapter() {
@@ -369,6 +392,7 @@ public class SSCCefBrowser extends BrowserFrame {
             @Override
             public void onTakeFocus(CefBrowser browser, boolean next) {
                 browserFocus_ = false;
+                browser.setFocus(true);
             }
         });
 
@@ -377,16 +401,20 @@ public class SSCCefBrowser extends BrowserFrame {
         }
 
         contentPanel.add(getBrowser().getUIComponent(), BorderLayout.CENTER);
-        MenuBar menuBar = new MenuBar(this, browser, control_pane_, downloadDialog, CefCookieManager.getGlobalManager());
-        menuBar.addBookmark("Canvas checking", "https://browserleaks.com/canvas");
-        menuBar.addBookmark("Audio Test", "https://music.apple.com/us/listen-now?at=1000l4QJ&ct=402&itscg=10000&itsct=402x");
-        menuBar.addBookmark("Youtube", "https://www.youtube.com/");
-        menuBar.addBookmark("Test Mp3", "https://www.nhaccuatui.com/bai-hat/dong-doi-dan-truong.NelwjxRBA6g4.html");
-        menuBar.addBookmark("Test YTB Video", "https://www.youtube.com/watch?v=LTByTPP_NxY");
-        menuBar.addBookmark("Version", "chrome://version");
+        if (!ToolSetting.getInstance().runMode) {
+            MenuBar menuBar = new MenuBar(this, browser, control_pane_, downloadDialog, CefCookieManager.getGlobalManager());
+            menuBar.addBookmark("Canvas checking", "https://browserleaks.com/canvas");
+            menuBar.addBookmark("Audio Test", "https://music.apple.com/us/listen-now?at=1000l4QJ&ct=402&itscg=10000&itsct=402x");
+            menuBar.addBookmark("Youtube", "https://www.youtube.com/");
+            menuBar.addBookmark("Test Mp3", "https://www.nhaccuatui.com/bai-hat/dong-doi-dan-truong.NelwjxRBA6g4.html");
+            menuBar.addBookmark("Test YTB Video", "https://www.youtube.com/watch?v=LTByTPP_NxY");
+            menuBar.addBookmark("Version", "chrome://version");
+            menuBar.addBookmark("fvison", "https://f.vision");
 
-        menuBar.addBookmarkSeparator();
-        setJMenuBar(menuBar);
+            menuBar.addBookmarkSeparator();
+            setJMenuBar(menuBar);
+        }
+        getBrowser().setFocus(true);
 
     }
 
@@ -414,8 +442,11 @@ public class SSCCefBrowser extends BrowserFrame {
             client_.addMessageRouter(msgRouter);
         }
         status_panel_ = new StatusPanel();
-        contentPanel.add(control_pane_, BorderLayout.NORTH);
-        contentPanel.add(status_panel_, BorderLayout.SOUTH);
+        if (!ToolSetting.getInstance().runMode) {
+            contentPanel.add(control_pane_, BorderLayout.NORTH);
+            contentPanel.add(status_panel_, BorderLayout.SOUTH);
+        }
+
         return contentPanel;
     }
 

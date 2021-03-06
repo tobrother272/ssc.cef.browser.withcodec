@@ -45,7 +45,7 @@ public class TaskReadThread implements Runnable {
     public void run() {
         try {
             output = new DataOutputStream(socket.getOutputStream());
-            sendMessageToServer("#connected#" + ToolSetting.getInstance().account);
+
             //messageLabel.setText("#connected#" + ToolSetting.getInstance().account);
         } catch (Exception e) {
         }
@@ -75,19 +75,26 @@ public class TaskReadThread implements Runnable {
     }
 
     public boolean waitLoading(int timeout) {
+        long startTime = System.currentTimeMillis();
+        long currentTime = 0;
         try {
-            int currentTime = 1;
-            while (form.isLoading()) {
+            while (currentTime < timeout) {
+                currentTime = (System.currentTimeMillis() - startTime) / 1000;
                 //messageLabel.setText("loading " + currentTime + "/" + timeout);
-                if (currentTime >= timeout) {
-                    System.out.println("Chờ load timeout");
-                    return false;
+                //&&ToolSetting.getInstance().countRequest<=1
+                if (!browser.isLoading()) {
+                    //System.out.println("Chờ load timeout");
+                    return true;
                 }
-                currentTime++;
-                System.out.println("Chờ load " + currentTime + "/" + timeout);
+                System.out.println("Chờ load " + currentTime + "/" + timeout + " còn " + ToolSetting.getInstance().countRequest + " requests");
                 sleep(1);
             }
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (currentTime >= timeout) {
+            System.out.println("Chờ load timeout");
+            return false;
         }
         return true;
     }
@@ -161,16 +168,13 @@ public class TaskReadThread implements Runnable {
 
     public void clickAndWait(String query, String lastID) {
         try {
-            sendMessageToServer("Nhận lệnh click " + query);
-            //messageLabel.setText("Nhận lệnh click " + query);
-            //System.out.println("Nhận lệnh click " + query);
-            //browser.getFocusedFrame().executeJavaScript(query, browser.getURL(), 0);
+            sendMessageToServer("Nhận lệnh click ");
             if (frame.length() == 0) {
                 browser.executeJavaScript(query, browser.getURL(), 0);
             } else {
                 browser.getFrame(frame).executeJavaScript(query, browser.getFrame(frame).getURL(), 0);
             }
-
+            System.out.println("Đã click đang chờ");
             //sleep(2);
         } catch (Exception e) {
         }
@@ -187,7 +191,11 @@ public class TaskReadThread implements Runnable {
             //messageLabel.setText("Nhận lệnh type " + query);
             if (frame.length() == 0) {
                 browser.executeJavaScript(query, browser.getURL(), 0);
+                sleep(2);
+                browser.executeJavaScript(query, browser.getURL(), 0);
             } else {
+                browser.getFrame(frame).executeJavaScript(query, browser.getFrame(frame).getURL(), 0);
+                sleep(1);
                 browser.getFrame(frame).executeJavaScript(query, browser.getFrame(frame).getURL(), 0);
             }
             //sleep(2);
@@ -213,6 +221,7 @@ public class TaskReadThread implements Runnable {
         try {
 
             lastID = "";
+            //System.out.println("Received message "+message);
             if (message.split("lastID:")[1].contains("frame=")) {
                 lastID = message.split("lastID:")[1].split("frame=")[0];
                 frame = message.split("lastID:")[1].split("frame=")[1];
@@ -250,6 +259,23 @@ public class TaskReadThread implements Runnable {
                 //waitJSValue(30, id);
             } else if (message.startsWith("#CURRENTURL#")) {
                 sendMessageToServer("#CURRENTURL#" + browser.getURL());
+            } else if (message.startsWith("#GETFRAMES#")) {
+
+                sendMessageToServer("Nhận lệnh GETFRAMES");
+                try {
+                    String frames = "";
+                    for (String frameName : browser.getFrameNames()) {
+                        if (browser.getFrameNames().indexOf(frameName) == browser.getFrameNames().size() - 1) {
+                            frames = frames + frameName;
+                        } else {
+                            frames = frames + frameName + ",";
+                        }
+                    }
+                    sendMessageToServer("#" + lastID + "#jsvalue=" + frames);
+                } catch (Exception e) {
+                    sendMessageToServer("#" + lastID + "#False get frames");
+                }
+
             } else if (message.startsWith("#BACK#")) {
                 sendMessageToServer("Nhận lệnh back");
                 browser.goBack();
@@ -302,8 +328,11 @@ public class TaskReadThread implements Runnable {
         sendMessageToServer("timeout");
     }
 
+    public boolean firstMessage = true;
+
     public void sendMessageToServer(String message) {
         try {
+            System.out.println(message);
             output.writeUTF(message);
             output.flush();
         } catch (Exception e) {

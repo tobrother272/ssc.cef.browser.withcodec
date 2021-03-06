@@ -47,10 +47,7 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import ssccefbrowser.SSCCefBrowser;
-import static ssccefbrowser.SSCCefBrowser.click;
-
 import tests.detailed.BrowserFrame;
-
 import tests.detailed.dialog.CookieManagerDialog;
 import tests.detailed.dialog.DevToolsDialog;
 import tests.detailed.dialog.DownloadDialog;

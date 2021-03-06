@@ -162,7 +162,19 @@ public class ControlPanel extends JPanel {
                     frame=frameIdentifier;
                 }
                 System.out.println("");
-                browser_.executeJavaScript("window.cefQuery({request:'#1614686286284#jsvalue='+console.log(document.evaluate(\"//iframe[contains(@src,'/includes/commerce/authenticate')]\", document, null, 7, null).snapshotItem(0).getAttribute(\"src\"))})", browser.getURL(), 0);
+                String js ="function simulateMouseClick(targetNode) {\n" +
+"    function triggerMouseEvent(targetNode, eventType) {\n" +
+"        var clickEvent = document.createEvent('MouseEvents');\n" +
+"        clickEvent.initEvent(eventType, true, true);\n" +
+"        targetNode.dispatchEvent(clickEvent);\n" +
+"    }\n" +
+"    [\"mouseover\", \"mousedown\", \"mouseup\", \"click\",\"dblclick\"].forEach(function(eventType) { \n" +
+"        triggerMouseEvent(targetNode, eventType);\n" +
+" \n" +
+"   });\n" +
+"}\n" +
+"simulateMouseClick(document.evaluate(\"//div[contains(@class,'track') and descendant::a[contains(@href,'1422648513')]]\", document, null, 7, null).snapshotItem(0))";
+                browser_.executeJavaScript(js, browser.getURL(), 0);
             }
         });
         add(playButton_);

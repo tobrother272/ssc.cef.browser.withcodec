@@ -13,6 +13,7 @@ import org.cef.callback.CefSchemeRegistrar;
 import org.cef.handler.CefAppHandlerAdapter;
 import org.cef.handler.CefResourceHandler;
 import org.cef.network.CefRequest;
+import util.Facking;
 import util.ToolSetting;
 
 public class AppHandler extends CefAppHandlerAdapter {
@@ -26,8 +27,9 @@ public class AppHandler extends CefAppHandlerAdapter {
 
     @Override
     public void onBeforeCommandLineProcessing(String string, CefCommandLine ccl) {
-        //ccl.appendSwitchWithValue("proxy-server", "http://107.181.187.120:24552");
+        Facking.fakeArgument(ccl);
         if (ToolSetting.getInstance().proxyHost.length() != 0) {
+            System.out.println("Đổi proxy sang "+"socks5://"+ToolSetting.getInstance().proxyHost+":"+ToolSetting.getInstance().proxyPort);
             ccl.appendSwitchWithValue("proxy-server", "socks5://"+ToolSetting.getInstance().proxyHost+":"+ToolSetting.getInstance().proxyPort);
             ccl.appendSwitchWithValue("proxy-server", "http://"+ToolSetting.getInstance().proxyHost+":"+ToolSetting.getInstance().proxyPort);
             ccl.appendSwitchWithValue("proxy-server", ToolSetting.getInstance().proxyHost+":"+ToolSetting.getInstance().proxyPort);

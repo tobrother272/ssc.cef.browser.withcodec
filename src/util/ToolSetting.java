@@ -7,6 +7,8 @@ package util;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import org.cef.CefSettings;
 import org.cef.OS;
@@ -21,8 +23,10 @@ public class ToolSetting {
 
     public static ToolSetting instance;
     public String fakeingFile;
-    public String lastUrl;
-    
+    public String fakingBeforeLoad="";
+    public String fakingLoadEnd="";
+    public String fakingResourceRequestHandler="";
+    public String fakingOnBeforeResourceLoad="";
     public int socketPort = 0;
     public String localIp = "192.168.1.9";
     public String proxyHost = "";
@@ -41,25 +45,7 @@ public class ToolSetting {
     public boolean fake = true;
     public String simplePath = OS.isLinux() ? "/" : "\\";
 
-    public String getLastUrl() {
-        return lastUrl;
-    }
-
-    public void setLastUrl(String lastUrl) {
-        this.lastUrl = lastUrl;
-    }
-    
-    public Boolean willFake(String Url){
-        try {
-            if(Url.equals(lastUrl)){
-               return false;
-            }
-            lastUrl=Url;
-        } catch (Exception e) {
-        }
-        return true;
-    }
-    
+    public int countRequest=0;
     
     public String profile = "";
     public String userAgent = "";
@@ -102,6 +88,7 @@ public class ToolSetting {
     public int openGL_greenBits;
     public int openGL_maxAnisotropy;
     public String openGL_shadingLanguage;
+    public boolean runMode=false;
     public int openGL_maxVertexUniformVectors;
     public int openGL_stencilBits;
     public int openGL_blueBits;
@@ -124,7 +111,7 @@ public class ToolSetting {
     public int webgl_else;
     public float webglNoise;
     public float webgl_3386;
-
+    public String startPage="https://www.youtube.com/";
     public CefSettings getCefSettings() {
         return cefSettings;
     }
@@ -147,20 +134,22 @@ public class ToolSetting {
         }
         return instance;
     }
-
+    public static String chromeUA="Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36";
+    public static String firefoxUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0";
     public ToolSetting() {
         boolean devMode = true;
+        
         if (devMode) {
-            userAgent = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36";
-            appVersion = "5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0";
-            profile = "C:\\PROFILES\\winartbestbeast";
+            userAgent = chromeUA;
+            appVersion = userAgent.replaceAll("Mozilla/","");
+            profile = "C:\\Users\\PC\\Desktop\\ProfileCef\\jeffhp4";
         }
+        countRequest=0;
         cefSettings = new CefSettings();
         cefSettings.windowless_rendering_enabled = false;
         //cefSettings.resources_dir_path = System.getProperty("user.dir") + "\\dll";
         cefSettings.locales_dir_path = System.getProperty("user.dir") + "\\dll\\locales";
         cefSettings.background_color = cefSettings.new ColorType(100, 255, 242, 211);
-
     }
 
     public void initRandomFake() {

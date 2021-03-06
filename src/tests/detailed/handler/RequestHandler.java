@@ -16,16 +16,16 @@ import org.cef.misc.BoolRef;
 import org.cef.network.CefPostData;
 import org.cef.network.CefPostDataElement;
 import org.cef.network.CefRequest;
-
 import java.awt.Frame;
 import java.util.HashMap;
 import java.util.Vector;
-
 import javax.swing.SwingUtilities;
-
+import org.cef.network.CefResponse;
+import org.cef.network.CefURLRequest;
 import tests.detailed.dialog.CertErrorDialog;
 import tests.detailed.dialog.PasswordDialog;
 import util.Facking;
+import util.ToolSetting;
 
 public class RequestHandler extends CefResourceRequestHandlerAdapter implements CefRequestHandler {
 
@@ -35,25 +35,17 @@ public class RequestHandler extends CefResourceRequestHandlerAdapter implements 
         owner_ = owner;
     }
 
-    
-    public void addCC(){
-       
-    }
-    
-    
     @Override
     public boolean onBeforeBrowse(CefBrowser browser, CefFrame frame, CefRequest request,
             boolean user_gesture, boolean is_redirect) {
-        addCC();
-        Facking.faking(browser, frame);
-
+        Facking.fakingBeforeLoad(browser, frame);
         return false;
     }
 
     @Override
     public boolean onOpenURLFromTab(CefBrowser browser, CefFrame frame, String target_url,
             boolean user_gesture) {
-        //Facking.faking(browser, frame);
+        //Facking.faking(browser, frame,"onOpenURLFromTab");
         return false;
     }
 
@@ -61,25 +53,37 @@ public class RequestHandler extends CefResourceRequestHandlerAdapter implements 
     public CefResourceRequestHandler getResourceRequestHandler(CefBrowser browser, CefFrame frame,
             CefRequest request, boolean isNavigation, boolean isDownload, String requestInitiator,
             BoolRef disableDefaultHandling) {
-        //Facking.faking(browser, frame);
-        addCC();
+        Facking.fakingResourceRequestHandler(browser, frame);
         return this;
     }
 
     @Override
+    public boolean onResourceResponse(
+            CefBrowser browser, CefFrame frame, CefRequest request, CefResponse response) {
+        
+        return false;
+    }
+
+    @Override
+    public void onResourceLoadComplete(CefBrowser browser, CefFrame frame, CefRequest request,
+            CefResponse response, CefURLRequest.Status status, long receivedContentLength) {
+        ToolSetting.getInstance().countRequest--;
+        //System.out.println("id size "+ToolSetting.getInstance().arrRequestID.size());
+    }
+
+    @Override
     public boolean onBeforeResourceLoad(CefBrowser browser, CefFrame frame, CefRequest request) {
-
-        addCC();
-
-        // If you send a HTTP-POST request to http://www.google.com/
-        // google rejects your request because they don't allow HTTP-POST.
-        //
-        // This test extracts the value of the test form.
-        // (see "Show Form" entry within BrowserMenuBar)
-        // and sends its value as HTTP-GET request to Google.
-        // Facking.faking(browser, frame);
+        Facking.fakingOnBeforeResourceLoad(browser, frame);
+        Facking.fakeHeader(browser, frame, request);
+        String id=""+System.currentTimeMillis();
+        
+        
+        
+        //request.setHeaderByName("request-id",id, true);
+        //System.out.println("onBeforeResourceLoad");
+        ToolSetting.getInstance().countRequest++;
         if (request.getMethod().equalsIgnoreCase("POST")
-                && (request.getURL().equals("http://www.google.com/") )  ) {
+                && (request.getURL().equals("http://www.google.com/"))) {
             String forwardTo = "http://www.google.com/#q=";
             CefPostData postData = request.getPostData();
             boolean sendAsGet = false;
@@ -113,12 +117,14 @@ public class RequestHandler extends CefResourceRequestHandlerAdapter implements 
                 }
             }
             if (sendAsGet) {
+
                 request.setFlags(0);
                 request.setMethod("GET");
                 request.setURL(forwardTo);
                 request.setFirstPartyForCookies(forwardTo);
                 HashMap<String, String> headerMap = new HashMap<>();
                 request.getHeaderMap(headerMap);
+
                 headerMap.remove("Content-Type");
                 headerMap.remove("Origin");
                 request.setHeaderMap(headerMap);
@@ -130,7 +136,7 @@ public class RequestHandler extends CefResourceRequestHandlerAdapter implements 
     @Override
     public CefResourceHandler getResourceHandler(
             CefBrowser browser, CefFrame frame, CefRequest request) {
-        addCC();
+
         // the non existing domain "foo.bar" is handled by the ResourceHandler implementation
         // E.g. if you try to load the URL http://www.foo.bar, you'll be forwarded
         // to the ResourceHandler class.
@@ -173,7 +179,6 @@ public class RequestHandler extends CefResourceRequestHandlerAdapter implements 
 
     @Override
     public void onRenderProcessTerminated(CefBrowser browser, TerminationStatus status) {
-        addCC();
         System.out.println("render process terminated: " + status);
     }
 }
